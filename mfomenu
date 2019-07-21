@@ -1,0 +1,101 @@
+
+WPDIR="/opt/bitnami/apps/wordpress/htdocs"
+WP="/opt/bitnami/apps/wordpress/bin/wp"
+
+title="
+MFO SysAdmin Menu"
+
+prompt="
+Pick an option [RETURN to display options, 0=Quit]: "
+
+options=(
+"Display Status of Bitnami Services"
+"Stop ALL Bitnami Services"
+"Start All Bitnami Services"
+"Restart Apache"
+"Restart All Bitnami Services"
+"Reset Wordpress Directory/File Permissions"
+"Wordpress Plugin List"
+"Wordpress Maintenance Mode: Status"
+"Wordpress Maintenance Mode: Activate"
+"Wordpress Maintenance Mode: Deactivate"
+)
+
+echo "$title"
+PS3="$prompt "
+select opt in "Quit" "${options[@]}" ; do 
+
+    case "$REPLY" in
+
+    0|1|exit ) echo "Goodbye!"; break;;
+
+    2 ) sudo /opt/bitnami/ctlscript.sh status;;
+
+    3 ) read -p "Sure? (y/n): " confirm 
+	case $confirm in 
+	   Y|y|YES|yes) sudo /opt/bitnami/ctlscript.sh stop;;
+	   *) echo "No action taken";;
+	esac;;
+
+    4 ) read -p "Sure? (y/n): " confirm 
+	case $confirm in 
+	   Y|y|YES|yes) sudo /opt/bitnami/ctlscript.sh start;;
+	   *) echo "No action taken";;
+	esac;;
+
+    5 ) read -p "Sure? (y/n): " confirm 
+	case $confirm in 
+	   Y|y|YES|yes) sudo /opt/bitnami/ctlscript.sh restart apache;;
+	   *) echo "No action taken";;
+	esac;;
+
+    6 ) read -p "Sure? (y/n): " confirm 
+	case $confirm in 
+	   Y|y|YES|yes) sudo /opt/bitnami/ctlscript.sh restart;;
+	   *) echo "No action taken";;
+	esac;;
+
+    7 ) echo "Reset permissions of directory $WPDIR" 
+	read -p "Sure? (y/n): " confirm 
+	case $confirm in 
+	   Y|y|YES|yes) 
+		if [ -d $WPDIR ]
+		then
+			echo "Adjusting ownership to bitnami:daemon..."
+			sudo chown -R bitnami:daemon $WPDIR
+			echo "Adjusting directories to 775..."
+			find $WPDIR -type d -print0 | sudo xargs -0 chmod 775
+			echo "Adjusting files to 664..."
+			sudo find $WPDIR -type f -print0 | sudo xargs -0 chmod 664
+			echo "Adjusting wp-config.php to 640"
+			sudo chmod 640 $WPDIR/wp-config.php
+			echo "Done."
+		else
+			echo "WPDIR variable not set or not a directory - no action taken"
+		fi
+		;;
+	   *) echo "No action taken";;
+	esac;;
+
+    8 ) $WP plugin list ;;
+
+    9 ) $WP maintenance-mode status ;;
+
+    10 ) read -p "Sure? (y/n): " confirm 
+	case $confirm in 
+	   Y|y|YES|yes) $WP maintenance-mode activate;;
+	   *) echo "No action taken";;
+	esac;;
+
+    11 ) read -p "Sure? (y/n): " confirm 
+	case $confirm in 
+	   Y|y|YES|yes) $WP maintenance-mode deactivate;;
+	   *) echo "No action taken";;
+	esac;;
+
+    *) echo "Invalid option. Try another one.";continue;;
+
+    esac
+
+done
+

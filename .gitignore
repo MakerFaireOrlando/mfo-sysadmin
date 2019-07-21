@@ -1,0 +1,10 @@
+.gitconfig
+.bash_history
+.bash_logout
+.cache/
+.mysql_history
+.nano/
+.viminfo
+.profile
+.sudo_as*
+
